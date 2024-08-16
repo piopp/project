@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace的值跟mapper接口的名称保持一致 -->
+<mapper namespace="com.xing.crm.mapper.UserMapper">
+
+    <sql id="search">
+        <where>
+            <if test="condition.usercode!=null and condition.usercode!=''">
+                usercode like '%${condition.usercode}%'
+            </if>
+            <if test="condition.username!=null and condition.username!=''">
+              and  username like '%${condition.username}%'
+            </if>
+            <if test="condition.phone!=null and condition.phone!=''">
+              and  phone like '%${condition.phone}%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="findCountByMap"  parameterType="map" resultType="int">
+        select count(*) from userm
+        <include refid="search"></include>
+    </select>
+
+    <select id="findListByMap" parameterType="map" resultType="userm">
+        select * from userm
+        <include refid="search"></include>
+                order by id desc  limit #{start},#{pageSize}
+
+    </select>
+
+    <insert id="insert" parameterType="map">
+        insert into userm
+            (id,usercode, username, userPassword, gender, birthday, phone,address, creationDate )
+      values (UUID(),#{usercode},#{username},#{userPassword},#{gender},#{birthday},#{phone},#{address},CURRENT_DATE())
+    </insert>
+
+    <select id="findByUserId" resultType="userm" parameterType="string">
+        select * from userm where id= #{id}
+    </select>
+
+
+
+
+    <update id="update" parameterType="userm">
+        update userm set usercode=#{usercode},username=#{username},userPassword=#{userPassword},gender=#{gender}
+                ,birthday=#{birthday},phone=#{phone},address=#{address},creationDate=#{creationDate}
+        where id=#{id}
+    </update>
+
+    <delete id="deleteById"  parameterType="string">
+        delete from userm where id= #{id}
+    </delete>
+  
+
+</mapper>

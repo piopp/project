@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"  media="all">
+    <script th:src="@{/layui/layui.js}" charset="utf-8"></script>
+
+</head>
+<body>
+
+</div>
+
+
+<form class="layui-form" action="" id="searchForm">
+    <div class="layui-form-item">
+        <br>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">用户编码</label>
+            <div class="layui-input-inline">
+                <input type="text" name="usercode" id="usercode"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">名字</label>
+            <div class="layui-input-inline">
+                <input type="text" name="username" id="username"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">手机号</label>
+            <div class="layui-input-inline">
+                <input type="text" name="phone" id="phone"  class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <a  onclick="doSearch1()" class="layui-btn layui-btn-radius" >搜索</a>
+            <button type="reset" class="layui-btn  layui-btn-radius ">重置</button>
+        </div>
+    </div>
+</form>
+
+
+
+
+<table class="layui-hide" id="test" lay-filter="test"></table>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+        <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+        <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+    </div>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script>
+    var $ ,layer,table;
+    layui.use(['table','form'], function(){
+
+        table=layui.table;
+        var form = layui.form;
+        $=layui.jquery;
+        layer=layui.layer;
+
+
+        table.render({
+            elem: '#test'
+            ,url:'/userm/listJson'
+            ,toolbar: '#toolbarDemo'
+            ,title: '用户数据表'
+            ,totalRow: true
+            ,cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'}
+                    /*  ,{field:'id', title:'ID', width:80, fixed: 'left', unresize: true, sort: true, totalRowText: '合计'}*/
+                    ,{field:'usercode', title:'用户编码', width:150}
+                    ,{field:'username', title:'用户名字', width:150}
+                    ,{field:'userPassword', title:'性别', width:150}
+                    ,{field:'address', title:'年龄', width:150}
+                    ,{field:'phone', title:'手机号', width:200}
+                    ,{field:'creationDate', title:'创建时间', width:150}
+                    ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:150}
+                ]
+            ]
+            ,page: true
+            ,limit:10
+            ,limits:[10,11,12,13]
+            ,id:'userTable'
+        });
+
+        //工具栏事件
+        table.on('toolbar(test)', function(obj){
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch(obj.event){
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    layer.alert(JSON.stringify(data));
+                    break;
+                case 'getCheckLength':
+                    var data = checkStatus.data;
+                    layer.msg('选中了：'+ data.length + ' 个');
+                    break;
+                case 'isAll':
+                    layer.msg(checkStatus.isAll ? '全选': '未全选')
+                    break;
+                case 'add':
+                    parent.layer.open({
+                        type: 2
+                        ,offset:'auto'
+                        ,title:'添加用户'
+                        ,content:'/userm/add'
+                        ,area:['1000px','600px']
+                        ,btn:'关闭全部'
+                        ,btnAlign:'c'
+                        ,yes:function () {
+                            parent.layer.closeAll();
+                        }
+                        , end:function () {
+                            location.reload(); //踩了好多坑才弄出来的，最后加载当前页面
+                        }
+
+                    });
+                    break;
+            };
+        });
+
+        //监听工具条
+  /*      table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+           var id = obj.data.id; ///获取订单ID
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+
+
+            if(layEvent === 'del'){ //删除
+                layer.confirm('真的删除行么', function(index){
+                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                    layer.close(index);
+                    //向服务端发送删除指令
+                    $.get("/userm/delete",{id:id},function (respData) {
+                        // console.log(respData);
+                        if(respData.success == 1){
+                            layer.msg("删除成功");
+                        }else{
+                            layer.msg("删除失败" + resp.message);
+                        }
+                    })
+                });
+            } else if(layEvent === 'edit'){ //编辑
+                //do something
+                parent.layer.open({
+                    type: 2
+                    ,offset:'auto'
+                    ,title:'添加用户'
+                    ,content:'/userm/edit'
+                    ,area:['1000px','600px']
+                    ,btn:'关闭全部'
+                    ,btnAlign:'c'
+                    ,yes:function () {
+                        parent.layer.closeAll();
+                    }
+                });
+
+            }
+        });*/
+
+        //触发行双击事件
+      /*  table.on('rowDouble(test)', function(obj){
+
+            var id = obj.data.id;
+
+            console.log(obj)
+
+            parent.layer.open({
+                type:2
+                ,offset:'auto'
+                ,title:'课程订单详情'
+                ,content:'/courseorder/detail?id='+id
+                ,area:['1000px','500px']
+                ,btn:'关闭全部'
+                ,btnAlign:'c'
+                ,yes:function () {
+                    parent.layer.closeAll();
+                }
+            });
+
+        });*/
+
+        //工具条事件
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var id = obj.data.id; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+
+
+
+
+            if(layEvent === 'del'){ //删除
+                layer.confirm('亲，真的删除这个用户吗？', function(index){
+                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                    layer.close(index);
+                    //向服务端发送删除指令
+                    
+                    $.get("/userm/delete",{id:id},function (respData) {
+                        console.log(respData);
+                        if(respData.success==1){
+                            layer.msg("删除用户成功");
+                            window.parent.location.reload();
+                        }else {
+                            layer.msg("删除用户失败");
+                        }
+                    });
+                    
+                    
+
+                  /*  $.get("/userm/delete",{id:id},function (respData) {
+                        if (respData.success == 1){
+                            layer.msg("删除成功");
+                        }else {
+                            layer.msg("删除失败"+respData.message);
+                        }
+                    });*/
+                });
+                
+                
+            } else if(layEvent === 'edit'){ //编辑
+
+                parent.layer.open({
+                    type: 2
+                    ,offset:'auto'
+                    ,title:'修改用户'
+                    ,content:'/userm/edit?id='+id
+                    ,area:['1000px','600px']
+                    ,btn:'关闭全部'
+                    ,btnAlign:'c'
+                    ,yes:function () {
+                        parent.layer.closeAll();
+
+                    }
+                    ,end:function (){
+                        location.reload(); //踩了好多坑才弄出来的，最后加载当前页面
+                    }
+                });
+
+
+            }
+        });
+
+    });
+
+   function doSearch1(){
+        //通过jquery获取参数的值
+       var usercode=$("#usercode").val();
+       var username=$("#username").val();
+       var phone=$("#phone").val();
+
+       table.reload('userTable',{
+           where: {
+               usercode:usercode,
+               username:username,
+               phone:phone
+           },page:{
+               curr: 1
+           }
+       });
+   /* function doSearch() {
+        //通过jquery获取参数的值
+        var name=$("#name").val();
+        var wecharname=$("#wecharname").val();
+        var qqno=$("#qqno").val();*/
+
+      /*  table.reload('orderTable', {
+
+            where: {
+                name:name,
+                wecharname:wecharname,
+                qqno:qqno
+            },page: {
+                curr:1
+            }
+        });*/
+
+    }
+
+
+
+</script>
+
+</body>
+</html>

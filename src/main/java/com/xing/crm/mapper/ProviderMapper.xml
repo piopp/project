@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace的值跟mapper接口的名称保持一致 -->
+<mapper namespace="com.xing.crm.mapper.ProviderMapper">
+    <sql id="search">
+        <where>
+            <if test="condition.pcode!=null and condition.pcode!=''">
+                pcode like '%${condition.pcode}%'
+            </if>
+            <if test="condition.pname!=null and condition.pname!=''">
+                and  pname like '%${condition.pname}%'
+            </if>
+            <if test="condition.pcontext!=null and condition.pcontext!=''">
+                and  pcontext like '%${condition.pcontext}%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="findCountByMap"  parameterType="map" resultType="int">
+        select count(*) from provider
+        <include refid="search"></include>
+    </select>
+
+    <select id="findListByMap" parameterType="map" resultType="provider">
+        select * from provider
+        <include refid="search"></include>
+                order by id desc  limit #{start},#{pageSize}
+    </select>
+
+    <insert id="insert" parameterType="map" >
+        insert into provider
+        (id,pcode,pname,pcontext,phone,email,createdate)
+        values
+        (UUID(),#{pcode},#{pname},#{pcontext},#{phone},#{email},CURRENT_DATE())
+    </insert>
+
+    <select id="findByProviderId" resultType="provider" parameterType="string">
+        select * from provider where id=#{id}
+    </select>
+
+    <update id="update" parameterType="provider">
+        update provider set pcode=#{pcode},pname=#{pname},pcontext=#{pcontext}
+                            ,phone=#{phone},
+        email=#{email},createdate=#{createdate}
+        where id=#{id}
+    </update>
+
+
+
+
+    <delete id="deleteById" parameterType="string" >
+        delete  from provider where id=#{id}
+    </delete>
+
+</mapper>
